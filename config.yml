@@ -1,0 +1,100 @@
+log:
+  level: -1
+  enablejson: false
+
+config:
+
+  http:
+    bind-address: localhost
+    port: 8080
+    shutdown-timeout: 400ms
+    static-content:
+      - url-prefix: /apps
+        indexes: false
+        document-root: /Users/marioa.imperato
+
+    #    html-content: /templates/*
+
+    server-context:
+      path: /api
+      context:
+        sys-metrics-endpoint: /metrics
+        apps-root-folder: /tmp
+
+    mw-use:
+      - gin-mw-metrics
+      - gin-mw-tracing
+      - gin-mw-error
+
+  mw-handler-registry:
+#    gin-mw-metrics:
+#    gin-mw-tracing:
+    gin-mw-error:
+      disclose-error-info: true
+
+  linked-services:
+    rest-client:
+      timeout: "15s"
+      skip-verify: true
+      trace-op-name: "rtp-%s"
+
+    mongo:
+      - name: local
+        #   host: "mongodb://10.70.150.88:27017,10.70.150.78:27017"
+        host: "mongodb://localhost:27017"
+        db-name: "anag"
+        #   user: env ----> K2M_MONGO_USER
+        #   pwd:  env ----> K2M_MONGO_PWD
+        # TLS or PLAIN
+        security-protocol: PLAIN
+        tls:
+          skip-verify: true
+        bulkWriteOrdered: true
+        # Admitted values: 1, majority
+        write-concern: majority
+        write-timeout: 120s
+        pool:
+          min-conn: 1
+          max-conn: 20
+          max-wait-queue-size: 1000
+          max-wait-time: 1000
+          max-connection-idle-time: 30000
+          max-connection-life-time: 6000000
+        collections:
+          - id: cliente-denorm
+            name: cliente_denorm
+
+    kafka:
+      - broker-name: local
+        # bootstrap-servers: "kafka1:9092,kafka2:9092,kafka3:9092"
+        # Event-Hub: testgect.servicebus.windows.net:9093
+        bootstrap-servers: "localhost:9092"
+        # SSL, SASL_SSL, else...
+        security-protocol: PLAIN
+        sasl:
+          ca-location: /Users/marioa.imperato/projects/tpm/certs/poste-cert-ca.pem
+          mechanisms: SCRAM-SHA-512
+          username: ap-00073.pk-00161.svc-anag-consumer-cliente
+          password: Gy995Ub3
+          skip-verify: false
+        consumer:
+          enable-auto-commit: false
+          isolation-level: read_committed
+          max-poll-records: 500
+          auto-offset-reset: earliest
+          session-timeout-ms: 30000
+          fetch-min-bytes: 1
+          fetch-max-bytes: 3000000
+          delay: 2000
+          max-retry: 1
+          enable-partition-eof: true
+        #   producer related configs
+        producer:
+          enable-transactions: true
+          acks: "all"
+          max-timeout-ms: 60000
+        tick-interval: 400ms
+        exit:
+          on-fail: true
+          on-eof: false
+
