@@ -6,7 +6,7 @@ import (
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common/util"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/middleware"
-	"github.com/mario-imperato/r3ng-apigtw/linkedservices"
+	"github.com/mario-imperato/r3ds9-apigtw/linkedservices"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"

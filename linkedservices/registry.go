@@ -3,9 +3,9 @@ package linkedservices
 import (
 	"context"
 	"errors"
-	"github.com/mario-imperato/r3ng-apigtw/linkedservices/kafka"
-	"github.com/mario-imperato/r3ng-apigtw/linkedservices/mongodb"
-	"github.com/mario-imperato/r3ng-apigtw/linkedservices/restclient"
+	"github.com/mario-imperato/r3ds9-apigtw/linkedservices/kafka"
+	"github.com/mario-imperato/r3ds9-apigtw/linkedservices/mongodb"
+	"github.com/mario-imperato/r3ds9-apigtw/linkedservices/restclient"
 
 	kafka_go "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/rs/zerolog/log"

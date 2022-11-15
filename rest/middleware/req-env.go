@@ -1,65 +1,72 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/mario-imperato/r3ng-apigtw/constants"
+	"github.com/mario-imperato/r3ds9-apigtw/rest"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/commons"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/user"
+	"net/http"
+	"net/url"
 )
 
+type AuthInfo struct {
+	Sid        string    `json:"sid,omitempty" yaml:"sid,omitempty"`
+	User       user.User `json:"user,omitempty" yaml:"user,omitempty"`
+	Remoteaddr string    `json:"remoteaddr,omitempty" yaml:"remoteaddr,omitempty"`
+	Flags      string    `json:"flags,omitempty" yaml:"flags,omitempty"`
+	NewSid     bool      `json:"-" yaml:"-"`
+}
+
 type ReqEnv struct {
-	Category      string
-	ReqType       string
+	Category      rest.ReqCategory
+	ReqType       rest.ReqType
 	Domain        string
 	Site          string
 	Lang          string
-	AppName       string
+	App           commons.App
 	ExtraPathInfo string
+	AuthInfo      AuthInfo
 }
 
-func extractEnvFromContext(c *gin.Context, reqCategory string) (ReqEnv, bool) {
-
-	env := ReqEnv{
-		Category:      reqCategory,
-		Domain:        c.Param("domain"),
-		Site:          c.Param("site"),
-		Lang:          c.Param("lang"),
-		AppName:       c.Param("appName"),
-		ExtraPathInfo: c.Param("exPathInfo"),
-	}
-
-	env.ReqType = resolveRequestType(reqCategory, env.Domain, env.Site, env.Lang, env.AppName)
-	return env, true
+func (re ReqEnv) IsMalformed() bool {
+	return re.ReqType == rest.ReqTypeMalformed
 }
 
-func resolveRequestType(mountPoint string, domain, site, lang, appName string) string {
+func (re ReqEnv) IsInvalid() bool {
+	return re.ReqType == rest.ReqTypeInvalid
+}
 
-	at := constants.AppTypeUiDomains
-	if domain != "domains" {
-		if site != "sites" {
-			at = constants.AppTypeUiSiteAppHome
-			switch appName {
-			case constants.AppHome:
-				at = constants.AppTypeUiSiteAppHome
-			default:
-				at = constants.AppTypeUiSiteAppHome
-			}
-		} else {
-			at = constants.AppTypeUiDomain
-		}
+func (re ReqEnv) IsValid() bool {
+	return re.ReqType != rest.ReqTypeInvalid && re.ReqType != rest.ReqTypeMalformed
+}
+
+func (re ReqEnv) IsUi() bool {
+	return re.Category != rest.ReqTypeCategoryApi
+}
+
+func (re ReqEnv) IsApi() bool {
+	return re.Category == rest.ReqTypeCategoryApi
+}
+
+func (re ReqEnv) String() string {
+	return fmt.Sprintf("[%s] category: %s, domain: %s, site: %s, lang: %s, appId: %s, extra-path: %s", re.ReqType, re.Category, re.Domain, re.Site, re.Lang, re.App.Id, re.ExtraPathInfo)
+}
+
+func (re ReqEnv) Path() string {
+	return RequestPath4(re.Category, re.Domain, re.Site, re.Lang, re.App.Id, re.ExtraPathInfo)
+}
+
+func (re ReqEnv) AbortRequest(c *gin.Context, redirectUrl string) {
+	if re.Category != rest.ReqTypeCategoryApi {
+		location := url.URL{Path: redirectUrl}
+		c.Redirect(http.StatusFound, location.RequestURI())
+	} else {
+		c.String(http.StatusBadRequest, "Bad Request")
 	}
+	c.Abort()
+}
 
-	switch mountPoint {
-	case "ui-console":
-		switch at {
-		case constants.AppTypeUiDomains:
-			at = constants.AppTypeUiConsoleDomains
-		case constants.AppTypeUiDomain:
-			at = constants.AppTypeUiConsoleDomain
-		case constants.AppTypeUiSiteAppHome:
-			at = constants.AppTypeUiConsoleSiteAppHome
-		}
-	case "api":
-		at = "To-be-defined"
-	}
-
-	return at
+func RequestPath4(category rest.ReqCategory, domain, site, lang, appId, extraPath string) string {
+	return fmt.Sprintf("/%s/%s/%s/%s/%s%s", category, domain, site, lang, appId, extraPath)
 }

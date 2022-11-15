@@ -6,10 +6,13 @@ import (
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	_ "github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv/resource"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/middleware"
-	"github.com/mario-imperato/r3ng-apigtw/linkedservices"
-	_ "github.com/mario-imperato/r3ng-apigtw/rest/api"
-	_ "github.com/mario-imperato/r3ng-apigtw/rest/ui"
+	"github.com/mario-imperato/r3ds9-apigtw/linkedservices"
+	_ "github.com/mario-imperato/r3ds9-apigtw/rest/api"
+	_ "github.com/mario-imperato/r3ds9-apigtw/rest/ui"
+	r3ds9_core "github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core"
+	mongodbModelVersion "github.com/mario-imperato/r3ds9-mongodb/version"
 	"github.com/rs/zerolog/log"
+
 	"os"
 	"os/signal"
 	"sync"
@@ -43,6 +46,8 @@ func main() {
 	}
 
 	log.Info().Interface("config", appCfg).Msg("configuration loaded")
+	log.Info().Str("r3ds9_mongodb.ver", mongodbModelVersion.VERSION).Msg("initialize stores")
+	r3ds9_core.InitStore()
 
 	/*
 		jc, err := InitGlobalTracer()

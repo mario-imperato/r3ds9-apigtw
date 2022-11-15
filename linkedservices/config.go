@@ -1,9 +1,9 @@
 package linkedservices
 
 import (
-	"github.com/mario-imperato/r3ng-apigtw/linkedservices/kafka"
-	"github.com/mario-imperato/r3ng-apigtw/linkedservices/mongodb"
-	"github.com/mario-imperato/r3ng-apigtw/linkedservices/restclient"
+	"github.com/mario-imperato/r3ds9-apigtw/linkedservices/kafka"
+	"github.com/mario-imperato/r3ds9-apigtw/linkedservices/mongodb"
+	"github.com/mario-imperato/r3ds9-apigtw/linkedservices/restclient"
 )
 
 type Config struct {

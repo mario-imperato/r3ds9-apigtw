@@ -39,10 +39,10 @@ config:
       trace-op-name: "rtp-%s"
 
     mongo:
-      - name: local
+      - name: r3ds9
         #   host: "mongodb://10.70.150.88:27017,10.70.150.78:27017"
         host: "mongodb://localhost:27017"
-        db-name: "anag"
+        db-name: "r3ds9"
         #   user: env ----> K2M_MONGO_USER
         #   pwd:  env ----> K2M_MONGO_PWD
         # TLS or PLAIN
@@ -61,8 +61,14 @@ config:
           max-connection-idle-time: 30000
           max-connection-life-time: 6000000
         collections:
-          - id: cliente-denorm
-            name: cliente_denorm
+          - id: site
+            name: site
+          - id: domain
+            name: domain
+          - id: session
+            name: session
+          - id: user
+            name: user
 
     kafka:
       - broker-name: local

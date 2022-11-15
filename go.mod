@@ -1,4 +1,4 @@
-module github.com/mario-imperato/r3ng-apigtw
+module github.com/mario-imperato/r3ds9-apigtw
 
 go 1.19
 
@@ -15,6 +15,7 @@ require (
 	go.mongodb.org/mongo-driver v1.11.0
 	gopkg.in/yaml.v3 v3.0.1
 )
+
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect

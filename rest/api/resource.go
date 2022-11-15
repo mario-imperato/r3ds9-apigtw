@@ -3,7 +3,8 @@ package api
 import (
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	"github.com/gin-gonic/gin"
-	"github.com/mario-imperato/r3ng-apigtw/rest/middleware"
+	"github.com/mario-imperato/r3ds9-apigtw/rest"
+	"github.com/mario-imperato/r3ds9-apigtw/rest/middleware"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"net/http/httputil"
@@ -23,7 +24,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 	gs = append(gs, httpsrv.G{
 		Name:        "Ui Home",
 		Path:        ":domain/:site/:lang",
-		Middlewares: []httpsrv.H{middleware.RequestEnvResolver("api")},
+		Middlewares: []httpsrv.H{middleware.RequestApiEnvResolver(rest.ReqTypeCategoryApi), middleware.RequestUserResolver(), middleware.RequestUserAuthorizazion()},
 		Resources: []httpsrv.R{
 			{
 				Name:          "proxy",
@@ -40,8 +41,11 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 func apiHandler() httpsrv.H {
 	return func(c *gin.Context) {
 
-		uiPath := c.Param("exPathInfo")
-		log.Info().Str("exPathInfo", uiPath).Send()
+		reqEnv := middleware.GetRequestEnvironmentFromContext(c)
+		if reqEnv.IsMalformed() {
+			c.String(http.StatusBadRequest, reqEnv.String())
+			return
+		}
 
 		remote, err := url.Parse("http://localhost:3000")
 		if err != nil {
@@ -59,4 +63,9 @@ func apiHandler() httpsrv.H {
 
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
+}
+
+func redirectToPath(c *gin.Context, p string) {
+	location := url.URL{Path: p}
+	c.Redirect(http.StatusFound, location.RequestURI())
 }
