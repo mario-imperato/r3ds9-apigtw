@@ -9,8 +9,8 @@ import (
 	"github.com/mario-imperato/r3ds9-apigtw/linkedservices"
 	_ "github.com/mario-imperato/r3ds9-apigtw/rest/api"
 	_ "github.com/mario-imperato/r3ds9-apigtw/rest/ui"
-	r3ds9_core "github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core"
-	mongodbModelVersion "github.com/mario-imperato/r3ds9-mongodb/version"
+	r3ds9MdbApiGtw "github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw"
+	r3ds9MdbVersion "github.com/mario-imperato/r3ds9-mongodb/version"
 	"github.com/rs/zerolog/log"
 
 	"os"
@@ -46,8 +46,8 @@ func main() {
 	}
 
 	log.Info().Interface("config", appCfg).Msg("configuration loaded")
-	log.Info().Str("r3ds9_mongodb.ver", mongodbModelVersion.VERSION).Msg("initialize stores")
-	r3ds9_core.InitStore()
+	log.Info().Str("r3ds9_mongodb.ver", r3ds9MdbVersion.VERSION).Msg("initialize stores")
+	r3ds9MdbApiGtw.InitStore()
 
 	/*
 		jc, err := InitGlobalTracer()

@@ -7,9 +7,9 @@ import (
 	"github.com/mario-imperato/r3ds9-apigtw/linkedservices"
 	"github.com/mario-imperato/r3ds9-apigtw/linkedservices/mongodb"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
-	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/commons"
-	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/domain"
-	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/site"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw/commons"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw/domain"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw/site"
 	"github.com/rs/zerolog/log"
 )
 

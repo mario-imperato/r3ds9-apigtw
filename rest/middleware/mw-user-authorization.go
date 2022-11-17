@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mario-imperato/r3ds9-apigtw/linkedservices"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
-	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/session"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw/session"
 	"github.com/rs/zerolog/log"
 )
 

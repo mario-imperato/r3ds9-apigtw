@@ -1,6 +1,6 @@
 package rest
 
-import "github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/commons"
+import "github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw/commons"
 
 type ReqCategory string
 

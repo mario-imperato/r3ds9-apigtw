@@ -8,8 +8,8 @@ import (
 	"github.com/mario-imperato/r3ds9-apigtw/linkedservices"
 	"github.com/mario-imperato/r3ds9-apigtw/linkedservices/mongodb"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
-	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/session"
-	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-core/user"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw/session"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw/user"
 	"github.com/rs/zerolog/log"
 	"net/http"
 )
@@ -100,7 +100,11 @@ func retrieveUserSession(c *gin.Context, lks *mongodb.MDbLinkedService, sid stri
 		return AuthInfo{}, err
 	}
 
+	/*
+	 * In here might rise a flag to indicate a change in RemoteAddr....
+	 */
 	return AuthInfo{
+		Sid:        s.SessionId(),
 		User:       *u,
 		Remoteaddr: c.Request.RemoteAddr,
 		Flags:      "",

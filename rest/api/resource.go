@@ -52,6 +52,8 @@ func apiHandler() httpsrv.H {
 			panic(err)
 		}
 
+		sid := reqEnv.AuthInfo.Sid
+
 		proxy := httputil.NewSingleHostReverseProxy(remote)
 		proxy.Director = func(req *http.Request) {
 			req.Header = c.Request.Header
@@ -59,6 +61,19 @@ func apiHandler() httpsrv.H {
 			req.URL.Scheme = remote.Scheme
 			req.URL.Host = remote.Host
 			req.URL.Path = "/r3ds9-auth/user"
+
+			req.Header.Set("X-R3ds9-Api-Key", "pippo")
+			req.Header.Set("X-R3ds9-Sid", sid)
+		}
+
+		proxy.ModifyResponse = func(r *http.Response) error {
+			hu := r.Header.Get("X-R3ds9-User")
+			if hu != "" {
+				log.Info().Str("sid", sid).Str("user", hu).Send()
+				r.Header.Del("X-R3ds9-User")
+			}
+			r.Header.Set("x-R3ds9-Apigtw", "new header")
+			return nil
 		}
 
 		proxy.ServeHTTP(c.Writer, c.Request)
