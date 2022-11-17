@@ -20,6 +20,11 @@ config:
       context:
         sys-metrics-endpoint: /metrics
         apps-root-folder: /tmp
+        proxy-mappings:
+          user:
+            hostname: localhost
+            port: 3000
+            prefix: /api/user
 
     mw-use:
       - gin-mw-metrics
