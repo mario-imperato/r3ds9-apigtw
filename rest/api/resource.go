@@ -1,16 +1,26 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	"github.com/gin-gonic/gin"
+	"github.com/mario-imperato/r3ds9-apicommon/linkedservices"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
 	"github.com/mario-imperato/r3ds9-apigtw/rest/middleware"
+	"github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw/session"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
+)
+
+const (
+	ApiKeyHeaderName = "X-R3ds9-Api-Key"
+	SidHeaderName    = "X-R3ds9-Sid"
+	UserHeaderName   = "X-R3ds9-User"
 )
 
 func init() {
@@ -22,8 +32,9 @@ func init() {
 type ProxyConfig struct {
 	Hostname string `yaml:"hostname" mapstructure:"hostname"`
 	Port     int    `yaml:"port" mapstructure:"port"`
-	Prefix   string `yaml:"prefix" mapstructure:"prefix"`
+	Url      string `yaml:"url" mapstructure:"url"`
 	Scheme   string `yaml:"scheme" mapstructure:"scheme"`
+	ApiKey   string `yaml:"api-key" mapstructure:"api-key"`
 }
 
 func (cfg ProxyConfig) Host() string {
@@ -48,7 +59,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 					Hostname: "localhost",
 					Port:     80,
 					Scheme:   "http",
-					Prefix:   "/api",
+					Url:      "/api/:wsCtx/:domain/:site/:lang:exPathInfo",
 				}
 				if err := mapstructure.Decode(v, &pxcfg); err != nil {
 					log.Error().Err(err).Str("config-key", k).Msg(semLogContext + " - decoding proxy config")
@@ -67,12 +78,12 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 
 	gs = append(gs, httpsrv.G{
 		Name:        "Ui Home",
-		Path:        ":domain/:site/:lang",
+		Path:        ":wsCtx/:domain/:site/:lang",
 		Middlewares: []httpsrv.H{middleware.RequestApiEnvResolver(rest.ReqTypeCategoryApi), middleware.RequestUserResolver(), middleware.RequestUserAuthorizazion()},
 		Resources: []httpsrv.R{
 			{
 				Name:          "proxy",
-				Path:          ":wsCtx/*exPathInfo",
+				Path:          "*exPathInfo",
 				Method:        httpsrv.MethodAny,
 				RouteHandlers: []httpsrv.H{apiHandler()},
 			},
@@ -93,7 +104,8 @@ func apiHandler() httpsrv.H {
 			return
 		}
 
-		cfg, ok := proxyConfig[c.Param("wsCtx")]
+		wsCtx := c.Param("wsCtx")
+		cfg, ok := proxyConfig[wsCtx]
 		if !ok {
 			log.Error().Str("ws-ctx", c.Param("wsCtx")).Msg(semLogContext + " ws context not found")
 			c.String(http.StatusBadRequest, reqEnv.String())
@@ -114,15 +126,21 @@ func apiHandler() httpsrv.H {
 		proxy.Director = func(req *http.Request) {
 			director(req)
 
+			/*
+			 * Set up the headers.
+			 */
 			req.Header = c.Request.Header
-			req.Header.Set("X-R3ds9-Api-Key", "pippo")
-			req.Header.Set("X-R3ds9-Sid", sid)
+			if cfg.ApiKey != "" {
+				req.Header.Set(ApiKeyHeaderName, cfg.ApiKey)
+			}
+
+			if sid != "" {
+				req.Header.Set(SidHeaderName, sid)
+				req.Header.Set(UserHeaderName, reqEnv.AuthInfo.User.Nickname)
+			}
 
 			req.Host = cfg.Host()
-			//req.URL.Scheme = cfg.Scheme
-			//req.URL.Host = cfg.Host()
-
-			path := cfg.Prefix + c.Param("exPathInfo")
+			path := resolveRemotePath(cfg.Url, wsCtx, reqEnv.Domain, reqEnv.Site, reqEnv.Lang, reqEnv.ExtraPathInfo)
 			log.Trace().Str("remote-path", path).Msg(semLogContext)
 			req.URL.Path = path
 			//req.URL.RawQuery = c.Request.URL.RawQuery
@@ -131,12 +149,16 @@ func apiHandler() httpsrv.H {
 		}
 
 		proxy.ModifyResponse = func(r *http.Response) error {
-			hu := r.Header.Get("X-R3ds9-User")
+			hu := r.Header.Get(UserHeaderName)
 			if hu != "" {
-				log.Info().Str("sid", sid).Str("user", hu).Send()
-				r.Header.Del("X-R3ds9-User")
+				if hu != reqEnv.AuthInfo.User.Nickname {
+					// The service returned a different nickname. Should promote the session on the new nickname
+					if err := switchSessionNickname(sid, reqEnv.AuthInfo.User.Nickname, hu); err != nil {
+						log.Error().Err(err).Msg(semLogContext)
+					}
+				}
+				r.Header.Del(UserHeaderName)
 			}
-			r.Header.Set("x-R3ds9-Apigtw", "new header")
 			return nil
 		}
 
@@ -147,4 +169,37 @@ func apiHandler() httpsrv.H {
 func redirectToPath(c *gin.Context, p string) {
 	location := url.URL{Path: p}
 	c.Redirect(http.StatusFound, location.RequestURI())
+}
+
+func resolveRemotePath(remotePath string, wsCtx, domain, site, lang, exPathInfo string) string {
+	remotePath = strings.ReplaceAll(remotePath, ":wsCtx", wsCtx)
+	remotePath = strings.ReplaceAll(remotePath, ":domain", domain)
+	remotePath = strings.ReplaceAll(remotePath, ":site", site)
+	remotePath = strings.ReplaceAll(remotePath, ":lang", lang)
+	remotePath = strings.ReplaceAll(remotePath, ":exPathInfo", exPathInfo)
+	return remotePath
+}
+
+func switchSessionNickname(sid string, oldNickname, newNickname string) error {
+	const semLogContext = "/api/resource/apiHandler/switchSessionNickname"
+	log.Info().Str("sid", sid).Str("old-user", oldNickname).Str("new-user", newNickname).Msg(semLogContext)
+
+	lks, err := linkedservices.GetMongoDbService(context.Background(), "r3ds9")
+	if err != nil {
+		log.Error().Err(err).Msg(semLogContext)
+		return err
+	}
+
+	coll := lks.GetCollection("session", "")
+	_, err = session.UpdateBySid(context.TODO(), coll, sid, true, session.UpdateWithNickname(newNickname))
+	if err != nil {
+		log.Error().Err(err).Msg(semLogContext)
+		return err
+	}
+
+	/*
+	 * TODO: should propagate an event of session update to all api-gtw. For now simply invalidate...
+	 */
+	session.InvalidateSession(sid)
+	return nil
 }

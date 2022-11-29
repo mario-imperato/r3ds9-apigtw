@@ -6,7 +6,7 @@ import (
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	_ "github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv/resource"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/middleware"
-	"github.com/mario-imperato/r3ds9-apigtw/linkedservices"
+	"github.com/mario-imperato/r3ds9-apicommon/linkedservices"
 	_ "github.com/mario-imperato/r3ds9-apigtw/rest/api"
 	_ "github.com/mario-imperato/r3ds9-apigtw/rest/ui"
 	r3ds9MdbApiGtw "github.com/mario-imperato/r3ds9-mongodb/model/r3ds9-apigtw"
@@ -47,7 +47,7 @@ func main() {
 
 	log.Info().Interface("config", appCfg).Msg("configuration loaded")
 	log.Info().Str("r3ds9_mongodb.ver", r3ds9MdbVersion.VERSION).Msg("initialize stores")
-	r3ds9MdbApiGtw.InitStore()
+	r3ds9MdbApiGtw.InitStore(0, 0)
 
 	/*
 		jc, err := InitGlobalTracer()

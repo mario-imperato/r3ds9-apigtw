@@ -8,10 +8,11 @@ config:
     bind-address: localhost
     port: 8080
     shutdown-timeout: 400ms
+    html-content: /Users/marioa.imperato/projects/r3ds9-2/web/apps/*/*tmpl
     static-content:
-      - url-prefix: /apps
+      - url-prefix: /web
         indexes: false
-        document-root: /Users/marioa.imperato
+        document-root: /Users/marioa.imperato/projects/r3ds9-2Ogni app/web
 
     #    html-content: /templates/*
 
@@ -19,12 +20,13 @@ config:
       path: /api
       context:
         sys-metrics-endpoint: /metrics
-        apps-root-folder: /tmp
+        # apps-root-folder: /Users/marioa.imperato/projects/r3ds9-2
         proxy-mappings:
-          user:
+          core:
+            api-key: my-api-key
             hostname: localhost
             port: 3000
-            prefix: /api/user
+            url: "/api/core/:domain/:site/:lang:exPathInfo"
 
     mw-use:
       - gin-mw-metrics
@@ -67,13 +69,13 @@ config:
           max-connection-life-time: 6000000
         collections:
           - id: site
-            name: site
+            name: apigtw_site
           - id: domain
-            name: domain
+            name: apigtw_domain
           - id: session
-            name: session
+            name: apigtw_session
           - id: user
-            name: user
+            name: apigtw_user
 
     kafka:
       - broker-name: local

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common/util"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	"github.com/gin-gonic/gin"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
@@ -19,6 +20,7 @@ func init() {
 
 func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 
+	/* Not used any more
 	ctxParam, ok := srvCtx.GetConfig(rest.AppsRootFolderContextParam)
 	if !ok {
 		log.Error().Msgf("cannot find context param %s... skipping ui handler s config", rest.AppsRootFolderContextParam)
@@ -30,6 +32,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 		log.Error().Str(rest.AppsRootFolderContextParam, appsRootFolder).Msg("context param found but directory doesn't exists")
 		return nil
 	}
+	*/
 
 	gs := make([]httpsrv.G, 0, 2)
 
@@ -42,7 +45,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 				Name:          "home",
 				Path:          "",
 				Method:        http.MethodGet,
-				RouteHandlers: []httpsrv.H{uiRootHandler(appsRootFolder)},
+				RouteHandlers: []httpsrv.H{uiRootHandler()},
 			},
 		},
 	})
@@ -57,7 +60,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 				Name:          "home-ui",
 				Path:          ":domain/:site/:lang/:appId",
 				Method:        http.MethodGet,
-				RouteHandlers: []httpsrv.H{uiHandler(appsRootFolder)},
+				RouteHandlers: []httpsrv.H{uiHandler()},
 			},
 			{
 				/*  :domain/*uiPath - Should present a selection of links to sites
@@ -66,7 +69,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 				Name:          "app path",
 				Path:          ":domain/:site/:lang/:appId/*exPathInfo",
 				Method:        http.MethodGet,
-				RouteHandlers: []httpsrv.H{uiHandler(appsRootFolder)},
+				RouteHandlers: []httpsrv.H{uiHandler()},
 			},
 		},
 	})
@@ -81,7 +84,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 				Name:          "console-domain_or_site",
 				Path:          ":domain/:site/:lang/:appId",
 				Method:        http.MethodGet,
-				RouteHandlers: []httpsrv.H{uiHandler(appsRootFolder)},
+				RouteHandlers: []httpsrv.H{uiHandler()},
 			},
 			{
 				/*
@@ -91,7 +94,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 				Name:          "console app path",
 				Path:          ":domain/:site/:lang/:appId/*exPathInfo",
 				Method:        http.MethodGet,
-				RouteHandlers: []httpsrv.H{uiHandler(appsRootFolder)},
+				RouteHandlers: []httpsrv.H{uiHandler()},
 			},
 		},
 	})
@@ -99,17 +102,64 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 	return gs
 }
 
-func uiRootHandler(appsRootFolder string) httpsrv.H {
+func uiRootHandler() httpsrv.H {
 	return func(c *gin.Context) {
 		redirectToPath(c, rest.DefaultRouteToRoot)
 	}
 }
 
-func uiHandler(appsRootFolder string) httpsrv.H {
+func uiHandler() httpsrv.H {
+
+	const semLogContext = "/ui/resource/uiHandler"
 	return func(c *gin.Context) {
 		reqEnv := middleware.GetRequestEnvironmentFromContext(c)
-		c.String(http.StatusOK, reqEnv.String())
+
+		//appPath := filepath.Join(reqEnv.App.Path, "index.tmpl")
+		appPath := reqEnv.App.Path
+		log.Trace().Str("app-index", appPath).Msg(semLogContext + " - fetching app index file")
+		c.HTML(http.StatusOK, appPath, reqEnv)
+		/*
+			appIndex, err := resolveAppIndex(reqEnv, reqEnv.App.Id, appPath)
+			if err != nil {
+				log.Error().Err(err).Str("app-index", appPath).Msg(semLogContext)
+				c.String(http.StatusOK, reqEnv.String())
+			} else {
+				c.HTML(http.StatusOK, appPath, reqEnv)
+			}
+		*/
 	}
+}
+
+func resolveAppIndex(env middleware.ReqEnv, appName, appPath string) (string, error) {
+
+	const semLogContext = "/ui/resource/resolve-app-index"
+	if _, err := os.Stat(appPath); err != nil {
+		log.Error().Err(err).Str("path", appPath).Msg(semLogContext)
+		return "", err
+	}
+
+	indexTmpl, err := os.ReadFile(appPath)
+	if err != nil {
+		log.Error().Err(err).Str("path", appPath).Msg(semLogContext)
+		return "", err
+	}
+
+	tmpl, err := util.ParseTemplates([]util.TemplateInfo{
+		{Name: appName, Content: string(indexTmpl)},
+	}, nil)
+
+	if err != nil {
+		log.Error().Err(err).Str("path", appPath).Msg(semLogContext)
+		return "", err
+	}
+
+	appIndex, err := util.ProcessTemplate(tmpl, env, false)
+	if err != nil {
+		log.Error().Err(err).Str("path", appPath).Msg(semLogContext)
+		return "", err
+	}
+
+	return string(appIndex), nil
 }
 
 func redirectToPath(c *gin.Context, p string) {
