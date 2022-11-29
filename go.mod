@@ -3,7 +3,7 @@ module github.com/mario-imperato/r3ds9-apigtw
 go 1.19
 
 require (
-	github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common v0.0.43
+	github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common v0.0.45
 	github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin v0.0.19
 	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/gin-gonic/gin v1.8.1

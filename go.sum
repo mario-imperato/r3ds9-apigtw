@@ -34,6 +34,10 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common v0.0.43/go.mod h1:+K8sLyoFlPtBIqIvauVWG9D173LfI63CsX5LnPhwYrc=
+github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common v0.0.44 h1:U7yAqaIl1uWALArFSUOK+rvFHNE9xrktASgCITovGQk=
+github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common v0.0.44/go.mod h1:+K8sLyoFlPtBIqIvauVWG9D173LfI63CsX5LnPhwYrc=
+github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common v0.0.45 h1:GnFr/CGqzfrD4AU1ZLWGlQ7yuc5vy/lsiK1qnfghkkY=
+github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common v0.0.45/go.mod h1:+K8sLyoFlPtBIqIvauVWG9D173LfI63CsX5LnPhwYrc=
 github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin v0.0.18/go.mod h1:T4znTAS1fLfHyzh32J/+XH6dtx0uwQtd6/NS0mh+hu0=
 github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin v0.0.19 h1:PmkFtbAL7lSb+LQwGaiBiDI6mZv4HX1OkjIT0HtnjX4=
 github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin v0.0.19/go.mod h1:T4znTAS1fLfHyzh32J/+XH6dtx0uwQtd6/NS0mh+hu0=

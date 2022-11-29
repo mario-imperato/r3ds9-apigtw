@@ -6,13 +6,13 @@ config:
 
   http:
     bind-address: localhost
-    port: 8080
+    port: ${R3DS9_APIGTW_PORT}
     shutdown-timeout: 400ms
     html-content: /Users/marioa.imperato/projects/r3ds9-2/web/apps/*/*tmpl
     static-content:
       - url-prefix: /web
         indexes: false
-        document-root: /Users/marioa.imperato/projects/r3ds9-2Ogni app/web
+        document-root: /Users/marioa.imperato/projects/r3ds9-2/web
 
     #    html-content: /templates/*
 
@@ -25,8 +25,8 @@ config:
           core:
             api-key: my-api-key
             hostname: localhost
-            port: 3000
-            url: "/api/core/:domain/:site/:lang:exPathInfo"
+            port: ${R3DS9_APICORE_PORT}
+            url: "/api/:domain/:site/:lang:exPathInfo"
 
     mw-use:
       - gin-mw-metrics
