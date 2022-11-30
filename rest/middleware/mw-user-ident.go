@@ -14,7 +14,7 @@ import (
 	"net/http"
 )
 
-func RequestUserResolver() httpsrv.H {
+func RequestUserResolver(requiresValidSessionCookie bool) httpsrv.H {
 	const semLogContext = "middleware/request-user-resolver"
 	return func(c *gin.Context) {
 
@@ -29,18 +29,30 @@ func RequestUserResolver() httpsrv.H {
 		identType, sid := resolveIdentificationType(c)
 		switch identType {
 		case rest.IdentTypeUnknown:
-			a, err = newGuestSession(c, lks)
-			if err != nil {
-				log.Error().Err(err).Msg(semLogContext)
+			if requiresValidSessionCookie {
+				err = errors.New("bad api request (1)")
+				log.Error().Err(err).Msg(semLogContext + " sid required")
 				systemError(c, err)
-			}
-		case rest.IdentTypeSessionCookie:
-			a, err = retrieveUserSession(c, lks, sid)
-			if err != nil {
+			} else {
 				a, err = newGuestSession(c, lks)
 				if err != nil {
 					log.Error().Err(err).Msg(semLogContext)
 					systemError(c, err)
+				}
+			}
+		case rest.IdentTypeSessionCookie:
+			a, err = retrieveUserSession(c, lks, sid)
+			if err != nil {
+				if requiresValidSessionCookie {
+					systemError(c, err)
+					err = errors.New("bad api request (2)")
+					log.Error().Err(err).Msg(semLogContext + " sid invalid")
+				} else {
+					a, err = newGuestSession(c, lks)
+					if err != nil {
+						log.Error().Err(err).Msg(semLogContext)
+						systemError(c, err)
+					}
 				}
 			}
 		}

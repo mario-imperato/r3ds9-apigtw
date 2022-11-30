@@ -23,10 +23,10 @@ config:
         # apps-root-folder: /Users/marioa.imperato/projects/r3ds9-2
         proxy-mappings:
           core:
-            api-key: my-api-key
+            api-key: ${R3DS9_API_KEY}
             hostname: localhost
             port: ${R3DS9_APICORE_PORT}
-            url: "/api/:domain/:site/:lang:exPathInfo"
+            url: "/api/core/:hostDomain/:hostSite/:hostLang:exPathInfo"
 
     mw-use:
       - gin-mw-metrics

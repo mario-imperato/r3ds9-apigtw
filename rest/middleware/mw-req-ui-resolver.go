@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	"github.com/gin-gonic/gin"
+	"github.com/mario-imperato/r3ds9-apicommon/definitions"
 	"github.com/mario-imperato/r3ds9-apicommon/linkedservices"
 	"github.com/mario-imperato/r3ds9-apicommon/linkedservices/mongodb"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
@@ -46,11 +47,11 @@ func extractUiEnvFromContext(c *gin.Context, reqCategory rest.ReqCategory) (ReqE
 
 	env := ReqEnv{
 		Category:      reqCategory,
-		Domain:        c.Param("domain"),
-		Site:          c.Param("site"),
-		Lang:          c.Param("lang"),
-		App:           commons.App{Id: c.Param("appId")},
-		ExtraPathInfo: c.Param("exPathInfo"),
+		Domain:        c.Param(definitions.HostDomainUrlParam),
+		Site:          c.Param(definitions.HostSiteUrlParam),
+		Lang:          c.Param(definitions.HostLangUrlParam),
+		App:           commons.App{Id: c.Param(definitions.HostAppIdUrlParam)},
+		ExtraPathInfo: c.Param(definitions.ApiGtwExtraPathInfoUrlParam),
 	}
 
 	env.ReqType = resolveUiRequestType(reqCategory, env.Domain, env.Site, env.Lang, env.App.Id)

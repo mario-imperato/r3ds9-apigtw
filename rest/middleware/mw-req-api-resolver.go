@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	"github.com/gin-gonic/gin"
+	"github.com/mario-imperato/r3ds9-apicommon/definitions"
 	"github.com/mario-imperato/r3ds9-apicommon/linkedservices"
 	"github.com/mario-imperato/r3ds9-apicommon/linkedservices/mongodb"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
@@ -46,10 +47,10 @@ func extractApiEnvFromContext(c *gin.Context, reqCategory rest.ReqCategory) (Req
 
 	env := ReqEnv{
 		Category:      reqCategory,
-		Domain:        c.Param("domain"),
-		Site:          c.Param("site"),
-		Lang:          c.Param("lang"),
-		ExtraPathInfo: c.Param("exPathInfo"),
+		Domain:        c.Param(definitions.HostDomainUrlParam),
+		Site:          c.Param(definitions.HostSiteUrlParam),
+		Lang:          c.Param(definitions.HostLangUrlParam),
+		ExtraPathInfo: c.Param(definitions.ApiGtwExtraPathInfoUrlParam),
 	}
 
 	env.ReqType = resolveApiRequestType(reqCategory, env.Domain, env.Site, env.Lang)

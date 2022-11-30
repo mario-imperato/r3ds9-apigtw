@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	"github.com/gin-gonic/gin"
+	"github.com/mario-imperato/r3ds9-apicommon/definitions"
 	"github.com/mario-imperato/r3ds9-apicommon/linkedservices"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
 	"github.com/mario-imperato/r3ds9-apigtw/rest/middleware"
@@ -15,12 +16,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
-)
-
-const (
-	ApiKeyHeaderName = "X-R3ds9-Api-Key"
-	SidHeaderName    = "X-R3ds9-Sid"
-	UserHeaderName   = "X-R3ds9-User"
 )
 
 func init() {
@@ -59,7 +54,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 					Hostname: "localhost",
 					Port:     80,
 					Scheme:   "http",
-					Url:      "/api/:wsCtx/:domain/:site/:lang:exPathInfo",
+					Url:      "/api/:apiCtx/:hostDomain/:hostSite/:hostLang*exPathInfo",
 				}
 				if err := mapstructure.Decode(v, &pxcfg); err != nil {
 					log.Error().Err(err).Str("config-key", k).Msg(semLogContext + " - decoding proxy config")
@@ -77,13 +72,13 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 	gs := make([]httpsrv.G, 0, 2)
 
 	gs = append(gs, httpsrv.G{
-		Name:        "Ui Home",
-		Path:        ":wsCtx/:domain/:site/:lang",
-		Middlewares: []httpsrv.H{middleware.RequestApiEnvResolver(rest.ReqTypeCategoryApi), middleware.RequestUserResolver(), middleware.RequestUserAuthorizazion()},
+		Name:        "Api Home",
+		Path:        definitions.ApiGtwApiGroupPattern,
+		Middlewares: []httpsrv.H{middleware.RequestApiEnvResolver(rest.ReqTypeCategoryApi), middleware.RequestUserResolver(true)},
 		Resources: []httpsrv.R{
 			{
 				Name:          "proxy",
-				Path:          "*exPathInfo",
+				Path:          "*" + definitions.ApiGtwExtraPathInfoUrlParam,
 				Method:        httpsrv.MethodAny,
 				RouteHandlers: []httpsrv.H{apiHandler()},
 			},
@@ -104,10 +99,10 @@ func apiHandler() httpsrv.H {
 			return
 		}
 
-		wsCtx := c.Param("wsCtx")
+		wsCtx := c.Param(definitions.ApiContextUrlParam)
 		cfg, ok := proxyConfig[wsCtx]
 		if !ok {
-			log.Error().Str("ws-ctx", c.Param("wsCtx")).Msg(semLogContext + " ws context not found")
+			log.Error().Str("ws-ctx", wsCtx).Msg(semLogContext + " ws context not found")
 			c.String(http.StatusBadRequest, reqEnv.String())
 			return
 		}
@@ -131,12 +126,12 @@ func apiHandler() httpsrv.H {
 			 */
 			req.Header = c.Request.Header
 			if cfg.ApiKey != "" {
-				req.Header.Set(ApiKeyHeaderName, cfg.ApiKey)
+				req.Header.Set(definitions.ApiKeyHeaderName, cfg.ApiKey)
 			}
 
 			if sid != "" {
-				req.Header.Set(SidHeaderName, sid)
-				req.Header.Set(UserHeaderName, reqEnv.AuthInfo.User.Nickname)
+				req.Header.Set(definitions.SidHeaderName, sid)
+				req.Header.Set(definitions.UserHeaderName, reqEnv.AuthInfo.User.Nickname)
 			}
 
 			req.Host = cfg.Host()
@@ -149,7 +144,7 @@ func apiHandler() httpsrv.H {
 		}
 
 		proxy.ModifyResponse = func(r *http.Response) error {
-			hu := r.Header.Get(UserHeaderName)
+			hu := r.Header.Get(definitions.UserHeaderName)
 			if hu != "" {
 				if hu != reqEnv.AuthInfo.User.Nickname {
 					// The service returned a different nickname. Should promote the session on the new nickname
@@ -157,7 +152,7 @@ func apiHandler() httpsrv.H {
 						log.Error().Err(err).Msg(semLogContext)
 					}
 				}
-				r.Header.Del(UserHeaderName)
+				r.Header.Del(definitions.UserHeaderName)
 			}
 			return nil
 		}
@@ -172,11 +167,11 @@ func redirectToPath(c *gin.Context, p string) {
 }
 
 func resolveRemotePath(remotePath string, wsCtx, domain, site, lang, exPathInfo string) string {
-	remotePath = strings.ReplaceAll(remotePath, ":wsCtx", wsCtx)
-	remotePath = strings.ReplaceAll(remotePath, ":domain", domain)
-	remotePath = strings.ReplaceAll(remotePath, ":site", site)
-	remotePath = strings.ReplaceAll(remotePath, ":lang", lang)
-	remotePath = strings.ReplaceAll(remotePath, ":exPathInfo", exPathInfo)
+	remotePath = strings.ReplaceAll(remotePath, ":"+definitions.ApiContextUrlParam, wsCtx)
+	remotePath = strings.ReplaceAll(remotePath, ":"+definitions.HostDomainUrlParam, domain)
+	remotePath = strings.ReplaceAll(remotePath, ":"+definitions.HostSiteUrlParam, site)
+	remotePath = strings.ReplaceAll(remotePath, ":"+definitions.HostLangUrlParam, lang)
+	remotePath = strings.ReplaceAll(remotePath, ":"+definitions.ApiGtwExtraPathInfoUrlParam, exPathInfo)
 	return remotePath
 }
 

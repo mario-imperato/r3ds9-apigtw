@@ -4,6 +4,7 @@ import (
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-common/util"
 	"github.com/GPA-Gruppo-Progetti-Avanzati-SRL/tpm-gin/httpsrv"
 	"github.com/gin-gonic/gin"
+	"github.com/mario-imperato/r3ds9-apicommon/definitions"
 	"github.com/mario-imperato/r3ds9-apigtw/rest"
 	"github.com/mario-imperato/r3ds9-apigtw/rest/middleware"
 	"github.com/rs/zerolog/log"
@@ -52,13 +53,13 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 
 	gs = append(gs, httpsrv.G{
 		Name:        "Ui Group",
-		Path:        "/ui",
+		Path:        definitions.ApiGtwUiGroup,
 		AbsPath:     true,
-		Middlewares: []httpsrv.H{middleware.RequestUiEnvResolver(rest.ReqTypeCategoryUi), middleware.RequestUserResolver(), middleware.RequestUserAuthorizazion()},
+		Middlewares: []httpsrv.H{middleware.RequestUiEnvResolver(rest.ReqTypeCategoryUi), middleware.RequestUserResolver(false), middleware.RequestUserAuthorizazion()},
 		Resources: []httpsrv.R{
 			{
 				Name:          "home-ui",
-				Path:          ":domain/:site/:lang/:appId",
+				Path:          definitions.ApiGtwUiPathPatternHome,
 				Method:        http.MethodGet,
 				RouteHandlers: []httpsrv.H{uiHandler()},
 			},
@@ -67,7 +68,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 				 *  :domain/:site/:lang/*uiPath - Is the website of :site
 				 */
 				Name:          "app path",
-				Path:          ":domain/:site/:lang/:appId/*exPathInfo",
+				Path:          definitions.ApiGtwUiPathPatternNested,
 				Method:        http.MethodGet,
 				RouteHandlers: []httpsrv.H{uiHandler()},
 			},
@@ -76,13 +77,13 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 
 	gs = append(gs, httpsrv.G{
 		Name:        "Ui Group",
-		Path:        "/ui-console",
+		Path:        definitions.ApiGtwUiConsoleGroup,
 		AbsPath:     true,
-		Middlewares: []httpsrv.H{middleware.RequestUiEnvResolver(rest.ReqTypeCategoryUiConsole), middleware.RequestUserResolver(), middleware.RequestUserAuthorizazion()},
+		Middlewares: []httpsrv.H{middleware.RequestUiEnvResolver(rest.ReqTypeCategoryUiConsole), middleware.RequestUserResolver(false), middleware.RequestUserAuthorizazion()},
 		Resources: []httpsrv.R{
 			{
 				Name:          "console-domain_or_site",
-				Path:          ":domain/:site/:lang/:appId",
+				Path:          definitions.ApiGtwUiPathPatternHome,
 				Method:        http.MethodGet,
 				RouteHandlers: []httpsrv.H{uiHandler()},
 			},
@@ -92,7 +93,7 @@ func registerGroups(srvCtx httpsrv.ServerContext) []httpsrv.G {
 				 * :domain/:site/:lang/:appName/*uiPath Is the console for the site...
 				 */
 				Name:          "console app path",
-				Path:          ":domain/:site/:lang/:appId/*exPathInfo",
+				Path:          definitions.ApiGtwUiPathPatternNested,
 				Method:        http.MethodGet,
 				RouteHandlers: []httpsrv.H{uiHandler()},
 			},
